@@ -39,9 +39,9 @@ pipeline {
             steps {
                 script{
                     //https://<AwsAccountNumber>.dkr.ecr.<region>.amazonaws.com/ibt-student', 'ecr:<region>:<credentialsId>
-                    docker.withRegistry('https://630437092685.dkr.ecr.us-east-2.amazonaws.com/ibt-student', 'ecr:us-east-2:ibt-ecr') {
+                    docker.withRegistry('https://689080587585.dkr.ecr.us-east-2.amazonaws.com/ibt-student', 'ecr:us-east-2:ibt-ecr') {
                     // build image
-                    def myImage = docker.build("630437092685.dkr.ecr.us-east-2.amazonaws.com/ibt-student:latest")
+                    def myImage = docker.build("689080587585.dkr.ecr.us-east-2.amazonaws.com/ibt-student:latest")
                     // push image
                     myImage.push()
                     }
@@ -50,7 +50,7 @@ pipeline {
         }
         stage('Trivy Scan') {
             steps {
-                sh 'trivy image --format template --template "@/var/lib/jenkins/trivy_tmp/html.tpl" --output trivy_report.html 630437092685.dkr.ecr.us-east-2.amazonaws.com/ibt-student:latest'
+                sh 'trivy image --format template --template "@/var/lib/jenkins/trivy_tmp/html.tpl" --output trivy_report.html 689080587585.dkr.ecr.us-east-2.amazonaws.com/ibt-student:latest'
             }
         }
     }
