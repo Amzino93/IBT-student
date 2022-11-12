@@ -39,7 +39,7 @@ pipeline {
             steps {
                 script{
                     //https://<AwsAccountNumber>.dkr.ecr.<region>.amazonaws.com/ibt-student', 'ecr:<region>:<credentialsId>
-                    docker.withRegistry('https://689080587585.dkr.ecr.us-east-2.amazonaws.com/ibt-student', 'ecr:us-east-2:ibt-ecr') {
+                    docker.withRegistry('https://689080587585.dkr.ecr.us-east-2.amazonaws.com/ibt-student', 'ecr:us-east-2:amza-ecr') {
                     // build image
                     def myImage = docker.build("689080587585.dkr.ecr.us-east-2.amazonaws.com/ibt-student:latest")
                     // push image
