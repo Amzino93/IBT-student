@@ -48,6 +48,35 @@ pipeline {
                 }
             }
         }
+         stage('Deploy to DEV') {
+                    steps {
+                       withCredentials([[
+                            $class: 'AmazonWebServicesCredentialsBinding',
+                            credentialsId: "amza-ecr",
+                            accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                            secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                       ]]){
+                           ansiblePlaybook(
+                                  playbook: 'ansible/deploy-docker.yaml',
+                                  inventory: 'ansible/hosts',
+                                   credentialsId: 'amza-ssh',
+                                   colorized: true,
+                                   extraVars: [
+                                       "myHosts" : "devServer",
+                                        "compose_file": "${WORKSPACE}/docker-compose.yaml",
+                                        "access_key":  AWS_ACCESS_KEY_ID,
+                                        "access_secret": AWS_SECRET_ACCESS_KEY
+                                   ]
+                                )
+                            }
+
+                        }
+
+                  }
+
+             }
+
+        }
         stage('Trivy Scan') {
             steps {
                 sh 'trivy image --format template --template "@/var/lib/jenkins/trivy_tmp/html.tpl" --output trivy_report.html 689080587585.dkr.ecr.us-east-2.amazonaws.com/ibt-student:latest'
