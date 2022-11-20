@@ -13,7 +13,7 @@ pipeline {
         // Run Unit test
         stage('Run Unit Test') {
             steps {
-                sh 'cd app && npm'
+                sh 'cd app && npm test'
             }
         }
         // run sonarqube test
