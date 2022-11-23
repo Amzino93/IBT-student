@@ -16,5 +16,4 @@ describe('Simple test', function() {
         assert.notEqual('foo', 'bar', '`foo` not equal `bar`');
     });
 });
-Footer
 
