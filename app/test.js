@@ -16,5 +16,3 @@ describe('Simple test', function() {
         assert.notEqual('foo', 'bar', '`foo` not equal `bar`');
     });
 });
-Footer
-© 2022 GitHub, Inc.
