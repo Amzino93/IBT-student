@@ -13,7 +13,7 @@ pipeline {
         // Run Unit test
         stage('Run Unit Test') {
             steps {
-                echo 'cd app && npm test'
+                sh 'cd app && npm test'
             }
         }
         // run sonarqube test
@@ -31,7 +31,7 @@ pipeline {
             steps {
                 script {
                     // build image
-                    docker.build("689080587585.dkr.ecr.us-east-2.amazonaws.com/ibt-student:latest")
+                    docker.build("630437092685.dkr.ecr.us-east-2.amazonaws.com/ibt-student:latest")
                 }
             }
         }
@@ -39,42 +39,67 @@ pipeline {
             steps {
                 script{
                     //https://<AwsAccountNumber>.dkr.ecr.<region>.amazonaws.com/ibt-student', 'ecr:<region>:<credentialsId>
-                    docker.withRegistry('https://689080587585.dkr.ecr.us-east-2.amazonaws.com/ibt-student', 'ecr:us-east-2:amza-ecr') {
+                    docker.withRegistry('https://630437092685.dkr.ecr.us-east-2.amazonaws.com/ibt-student', 'ecr:us-east-2:ibt-ecr') {
                     // build image
-                    def myImage = docker.build("689080587585.dkr.ecr.us-east-2.amazonaws.com/ibt-student:latest")
+                    def myImage = docker.build("630437092685.dkr.ecr.us-east-2.amazonaws.com/ibt-student:latest")
                     // push image
                     myImage.push()
                     }
                 }
             }
         }
-        stage('Trivy Scan') {
+        stage('Trivy Scan (Aqua)') {
             steps {
-                sh 'trivy image --format template --template "@/var/lib/jenkins/trivy_tmp/html.tpl" --output trivy_report.html 689080587585.dkr.ecr.us-east-2.amazonaws.com/ibt-student:latest'
+                sh 'trivy image --format template --template "@/var/lib/jenkins/trivy_tmp/html.tpl" --output trivy_report.html 630437092685.dkr.ecr.us-east-2.amazonaws.com/ibt-student:latest'
             }
         }
-      stage('Deploy to DEV') {
-                        steps {
-                           withCredentials([[
-                                $class: 'AmazonWebServicesCredentialsBinding',
-                                credentialsId: "amza-ecr",
-                                accessKeyVariable: 'AWS_ACCESS_KEY_ID',
-                                secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
-                           ]]){
-                               ansiblePlaybook(
-                                      playbook: 'ansible/deploy-docker.yaml',
-                                      inventory: 'ansible/hosts',
-                                       credentialsId: 'amza-ssh',
-                                       colorized: true,
-                                       extraVars: [
-                                           "myHosts" : "devServer",
-                                            "compose_file": "${WORKSPACE}/docker-compose.yaml",
-                                            "access_key":  AWS_ACCESS_KEY_ID,
-                                            "access_secret": AWS_SECRET_ACCESS_KEY
-                                       ]
-                                    )
-                                }
-
+        stage('Deploy to dev') {
+            steps {
+                withCredentials([[
+                    $class: 'AmazonWebServicesCredentialsBinding',
+                    credentialsId: "amza-ecr",
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                ]]){
+                    ansiblePlaybook(
+                          playbook: 'ansible/deploy-docker.yaml',
+                          inventory: 'ansible/hosts',
+                          credentialsId: 'amza',
+                          colorized: true,
+                          extraVars: [
+                              "myHosts" : "devServer",
+                              "compose_file": "${WORKSPACE}/docker-compose.yaml",
+                              "access_key": AWS_ACCESS_KEY_ID,
+                              "access_secret": AWS_SECRET_ACCESS_KEY
+                          ]
+                      )
+                }
+            }
+        }
+        stage('Deploy to prod') {
+                steps {
+                    withCredentials([[
+                        $class: 'AmazonWebServicesCredentialsBinding',
+                        credentialsId: "amza-ecr",
+                        accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                        secretKeyVariable: 'AWS_SECRET_ACCESS_KEY'
+                    ]]){
+                        ansiblePlaybook(
+                              playbook: 'ansible/deploy-docker.yaml',
+                              inventory: 'ansible/hosts',
+                              credentialsId: 'amza',
+                              colorized: true,
+                              extraVars: [
+                                  "myHosts" : "prodServer",
+                                  "compose_file": "${WORKSPACE}/docker-compose.yaml",
+                                  "access_key": AWS_ACCESS_KEY_ID,
+                                  "access_secret": AWS_SECRET_ACCESS_KEY
+                              ]
+                          )
+                    }
+                }
+            }
+    }
     post {
         always {
             archiveArtifacts artifacts: "trivy_report.html", fingerprint: true
